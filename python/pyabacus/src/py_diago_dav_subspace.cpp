@@ -18,13 +18,8 @@ void bind_diago_dav_subspace(py::module& m)
 {
     py::module hsolver = m.def_submodule("hsolver");
 
-    py::class_<hsolver::diag_comm_info>(hsolver, "diag_comm_info")
-        .def(py::init<const int, const int>(), "rank"_a, "nproc"_a)
-        .def_readonly("rank", &hsolver::diag_comm_info::rank)
-        .def_readonly("nproc", &hsolver::diag_comm_info::nproc);
-
     py::class_<py_hsolver::PyDiagoDavSubspace>(hsolver, "diago_dav_subspace")
-        .def(py::init<int, int>(), R"pbdoc(
+        .def(py::init<int, int, bool>(), R"pbdoc(
             Constructor of diago_dav_subspace, a class for diagonalizing 
             a linear operator using the Davidson-Subspace Method.
 
@@ -38,7 +33,9 @@ void bind_diago_dav_subspace(py::module& m)
                 The number of basis functions.
             nband : int 
                 The number of bands to be calculated.
-        )pbdoc", "nbasis"_a, "nband"_a)
+            need_mpi : bool
+                Whether MPI is needed.
+        )pbdoc", "nbasis"_a, "nband"_a, "need_mpi"_a)
         .def("diag", &py_hsolver::PyDiagoDavSubspace::diag, R"pbdoc(
             Diagonalize the linear operator using the Davidson-Subspace Method.
 
@@ -76,8 +73,10 @@ void bind_diago_dav_subspace(py::module& m)
         "max_iter"_a, 
         "need_subspace"_a, 
         "is_occupied"_a, 
-        "scf_type"_a, 
-        "comm_info"_a)
+        "scf_type"_a)
+        .def("get_nproc", &py_hsolver::PyDiagoDavSubspace::get_nproc, R"pbdoc(
+            Get the number of processes.
+        )pbdoc")
         .def("set_psi", &py_hsolver::PyDiagoDavSubspace::set_psi, R"pbdoc(
             Set the initial guess of the eigenvectors, i.e. the wave functions.
         )pbdoc", "psi_in"_a)

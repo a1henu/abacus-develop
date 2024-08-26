@@ -20,15 +20,37 @@ namespace py_hsolver
 class PyDiagoDavSubspace
 {
 public:
-    PyDiagoDavSubspace(int nbasis, int nband) : nbasis(nbasis), nband(nband)
+    PyDiagoDavSubspace(int nbasis, int nband, bool need_mpi) : nbasis(nbasis), nband(nband)
     {
         psi = new std::complex<double>[nbasis * nband];
         eigenvalue = new double[nband];
+        
+        if (need_mpi) 
+        {
+#ifdef __MPI
+            int rank, nproc;
+            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+            MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+
+            comm_info = std::make_unique<hsolver::diag_comm_info>(MPI_COMM_WORLD, rank, nproc);
+#else
+            throw std::runtime_error("MPI is not enabled but need_mpi is true.");
+#endif
+        } 
+        else 
+        {
+#ifdef __MPI
+            throw std::runtime_error("MPI is enabled but need_mpi is false.");
+#else
+            comm_info = std::make_unique<hsolver::diag_comm_info>(0, 1);            
+#endif
+        }
     }
 
     PyDiagoDavSubspace(const PyDiagoDavSubspace&) = delete;
     PyDiagoDavSubspace& operator=(const PyDiagoDavSubspace&) = delete;
-    PyDiagoDavSubspace(PyDiagoDavSubspace&& other) : nbasis(other.nbasis), nband(other.nband)
+    PyDiagoDavSubspace(PyDiagoDavSubspace&& other) : 
+        nbasis(other.nbasis), nband(other.nband), comm_info(std::move(other.comm_info))
     {
         psi = other.psi;
         eigenvalue = other.eigenvalue;
@@ -49,6 +71,11 @@ public:
             delete[] eigenvalue; 
             eigenvalue = nullptr; 
         }
+    }
+
+    int get_nproc()
+    {
+        return comm_info->nproc;
     }
 
     void set_psi(py::array_t<std::complex<double>> psi_in)
@@ -107,8 +134,7 @@ public:
         int max_iter,
         bool need_subspace,
         std::vector<bool> is_occupied,
-        bool scf_type,
-        hsolver::diag_comm_info comm_info
+        bool scf_type
     ) {
         auto hpsi_func = [mm_op] (std::complex<double> *hpsi_out,
                     std::complex<double> *psi_in, const int nband_in,
@@ -137,7 +163,7 @@ public:
             tol, 
             max_iter, 
             need_subspace, 
-            comm_info
+            *comm_info
         );
 
         return obj->diag(hpsi_func, psi, nbasis, eigenvalue, is_occupied, scf_type);
@@ -151,6 +177,7 @@ private:
     int nband;
 
     std::unique_ptr<hsolver::Diago_DavSubspace<std::complex<double>, base_device::DEVICE_CPU>> obj;
+    std::unique_ptr<hsolver::diag_comm_info> comm_info;
 };
 
 } // namespace py_hsolver

@@ -26,7 +26,8 @@ def dav_subspace(
     max_iter: int = 1000,
     need_subspace: bool = False,
     is_occupied: Union[List[bool], None] = None,
-    scf_type: bool = False
+    scf_type: bool = False,
+    need_mpi: bool = False
 ) -> Tuple[NDArray[np.float64], NDArray[np.complex128]]:
     """ A function to diagonalize a matrix using the Davidson-Subspace method.
 
@@ -59,7 +60,9 @@ def dav_subspace(
         Indicates whether the calculation is a self-consistent field (SCF) calculation. 
         If True, the initial precision of eigenvalue calculation can be coarse. 
         If False, it indicates a non-self-consistent field (non-SCF) calculation, 
-        where high precision in eigenvalue calculation is required from the start.  
+        where high precision in eigenvalue calculation is required from the start.
+    need_mpi : bool, optional
+        Whether to use MPI, by default False.  
     
     Returns
     -------
@@ -77,13 +80,13 @@ def dav_subspace(
     if init_v.ndim != 1 or init_v.dtype != np.complex128:
         init_v = init_v.flatten().astype(np.complex128, order='C')
     
-    _diago_obj_dav_subspace = hsolver.diago_dav_subspace(dim, num_eigs)
+    _diago_obj_dav_subspace = hsolver.diago_dav_subspace(dim, num_eigs, need_mpi)
     _diago_obj_dav_subspace.set_psi(init_v)
     _diago_obj_dav_subspace.init_eigenvalue()
     
-    comm_info = hsolver.diag_comm_info(0, 1)
+    nproc = _diago_obj_dav_subspace.get_nproc()
     assert dav_ndim > 1, "dav_ndim must be greater than 1."
-    assert dav_ndim * num_eigs < dim * comm_info.nproc, "dav_ndim * num_eigs must be less than dim * comm_info.nproc."
+    assert dav_ndim * num_eigs < dim * nproc, "dav_ndim * num_eigs must be less than dim * comm_info.nproc."
    
     _ = _diago_obj_dav_subspace.diag(
         mm_op,
@@ -93,8 +96,7 @@ def dav_subspace(
         max_iter,
         need_subspace,
         is_occupied,
-        scf_type,
-        comm_info
+        scf_type
     )
     
     e = _diago_obj_dav_subspace.get_eigenvalue()
