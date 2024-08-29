@@ -2,6 +2,10 @@ from pyabacus import hsolver
 import numpy as np
 import scipy
 
+# from mpi4py import MPI
+# comm = MPI.COMM_WORLD
+# rank = comm.Get_rank()
+
 h_mat = scipy.io.loadmat('./Si2.mat')['Problem']['A'][0, 0]
 
 nbasis = h_mat.shape[0]
@@ -26,9 +30,12 @@ e, v = hsolver.dav_subspace(
     dav_ndim=8,
     tol=1e-8,
     max_iter=1000,
-    scf_type=False
+    scf_type=False,
+    need_mpi=False
 )
 
+# MPI.Finalize()
+# if rank == 0:
 print('eigenvalues calculated by pyabacus: ', e)
 
 e_scipy, v_scipy = scipy.sparse.linalg.eigsh(h_mat, k=nband, which='SA', maxiter=1000)

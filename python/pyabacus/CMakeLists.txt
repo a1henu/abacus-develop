@@ -40,6 +40,8 @@ if(MKLROOT)
   add_definitions(-D__MKL)
   include_directories(${MKL_INCLUDE} ${MKL_INCLUDE}/fftw)
 
+  list(APPEND math_libs MKL::MKL MKL::MKL_SCALAPACK)
+
 # Since libtorch will find its own MKL, the fftw part conflicts with the original one.
 # When enable deepks, mkl will be linked within ${TORCH_LIBRARIES}.
   if(NOT ENABLE_DEEPKS)

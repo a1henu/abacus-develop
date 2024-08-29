@@ -1,12 +1,12 @@
 [build-system]
-requires = ["scikit-build-core>=0.3.3", "pybind11"]
+requires = ["scikit-build-core>=0.3.3", "pybind11", "mpi4py"]
 build-backend = "scikit_build_core.build"
 
 
 [project]
 name = "pyabacus"
 version = "0.0.1"
-description="A minimal two_center_integral package (with pybind11)"
+description="Minimal two_center_integral and eigen_solver package (with pybind11)"
 readme = "README.md"
 authors = [
   { name = "Jie Li", email = "lij@aisi.ac.cn" },

@@ -6,14 +6,14 @@ from typing import Tuple, List, Union, Callable
 
 from .._core import hsolver
 
-class diag_comm_info:
-    def __init__(self, rank: int, nproc: int) -> None: ...
+# class diag_comm_info:
+#     def __init__(self, rank: int, nproc: int) -> None: ...
     
-    @property
-    def rank(self) -> int: ...
+#     @property
+#     def rank(self) -> int: ...
     
-    @property
-    def nproc(self) -> int: ...
+#     @property
+#     def nproc(self) -> int: ...
     
 def dav_subspace(
     mm_op: Callable[[NDArray[np.complex128]], NDArray[np.complex128]],
